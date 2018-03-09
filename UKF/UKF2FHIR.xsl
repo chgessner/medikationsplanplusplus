@@ -18,11 +18,11 @@
         <xsl:call-template name="Custodian"/>
     </xsl:variable>
 
-    <xsl:variable name="OBSERVATIONS">
+    <xsl:variable name="RESOURCES">
+        <xsl:copy-of select="$PATIENT"/>
+        <xsl:copy-of select="$AUTHOR"/>
+        <xsl:copy-of select="$CUSTODIAN"/>
         <xsl:apply-templates mode="Observation" select="/mp:MP/mp:O"/>
-    </xsl:variable>
-
-    <xsl:variable name="MEDICATIONS">
         <xsl:apply-templates mode="Medications-Block" select="/mp:MP/mp:S"/>
     </xsl:variable>
 
@@ -32,6 +32,11 @@
 
     <xsl:template name="Bundle" mode="Bundle" match="mp:MP[not(ancestor::mp:MP)]">
         <xsl:param name="this" select="."/>
+
+        <xsl:variable name="COMPOSITION">
+            <xsl:call-template name="Composition"/>
+        </xsl:variable>
+
         <Bundle>
             <meta>
                 <versionId value="{$this/@v}"/>
@@ -42,13 +47,10 @@
                 <value value="{concat('urn:uuid:',$this/@U)}"/>
             </identifier>
             <type value="document"/>
-            <xsl:call-template name="Composition"/>
-            <xsl:copy-of select="$PATIENT/entry[resource]"/>
-            <xsl:copy-of select="$AUTHOR/entry[resource]"/>
-            <xsl:copy-of select="$CUSTODIAN/entry[resource]"/>
-            <xsl:copy-of select="$OBSERVATIONS/entry[resource]"/>
-            <xsl:copy-of select="$MEDICATIONS/entry[resource]"/>
+            <xsl:copy-of select="$COMPOSITION"/>
+            <xsl:copy-of select="$RESOURCES"/>
         </Bundle>
+
     </xsl:template>
 
     <xsl:template name="Composition" mode="Composition" match="mp:MP">
@@ -109,7 +111,7 @@
                     <code value="19009-0"/>
                 </coding>
             </code>
-            <xsl:for-each select="$MEDICATIONS/entry[resource/List]">
+            <xsl:for-each select="$RESOURCES/entry[resource/List]">
                 <entry>
                     <reference value="{./fullUrl/@value}"/>
                 </entry>
@@ -127,7 +129,7 @@
                     <code value="48765-2"/>
                 </coding>
             </code>
-            <xsl:for-each select="$OBSERVATIONS/entry[resource/AllergyIntolerance]">
+            <xsl:for-each select="$RESOURCES/entry[resource/AllergyIntolerance]">
                 <entry>
                     <reference value="{./fullUrl/@value}"/>
                 </entry>
@@ -147,7 +149,7 @@
             </code>
             <xsl:for-each
                 select="
-                    $OBSERVATIONS/entry[resource/Observation/code/coding[system/@value = 'http://loinc.org']
+                $RESOURCES/entry[resource/Observation/code/coding[system/@value = 'http://loinc.org']
                     [code[@value = '11449-6' or @value = '63895-7']]]">
                 <entry>
                     <reference value="{./fullUrl/@value}"/>
@@ -168,7 +170,7 @@
             </code>
             <xsl:for-each
                 select="
-                    $OBSERVATIONS/entry[resource/Observation/code/coding[system/@value = 'http://loinc.org']
+                    $RESOURCES/entry[resource/Observation/code/coding[system/@value = 'http://loinc.org']
                     [code[@value = '29463-7' or @value = '8302-2' or @value = '2160-0']]]">
                 <entry>
                     <reference value="{./fullUrl/@value}"/>
